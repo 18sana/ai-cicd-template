@@ -1,0 +1,35 @@
+name: AI CI/CD Monitoring
+
+on:
+  workflow_call:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm test
+
+      - name: Trigger AI Incident Workflow
+        if: failure()
+        run: |
+          curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "repository":"${{ github.repository }}",
+            "branch":"${{ github.ref_name }}",
+            "commit_sha":"${{ github.sha }}",
+            "author":"${{ github.actor }}",
+            "event_name":"${{ github.event_name }}",
+            "run_url":"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "pr_number":"${{ github.event.pull_request.number || '' }}",
+            "pr_title":"${{ github.event.pull_request.title || '' }}",
+            "pr_url":"${{ github.event.pull_request.html_url || '' }}"
+          }'
