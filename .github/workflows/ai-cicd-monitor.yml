@@ -15,10 +15,12 @@ jobs:
         run: npm install
 
       - name: Run Tests
+        id: tests
         run: npm test
+        continue-on-error: true
 
       - name: Trigger AI Incident Workflow
-        if: failure()
+        if: steps.tests.outcome == 'failure'
         run: |
           curl -X POST "${{ secrets.N8N_WEBHOOK_URL }}" \
           -H "Content-Type: application/json" \
@@ -33,3 +35,7 @@ jobs:
             "pr_title":"${{ github.event.pull_request.title || '' }}",
             "pr_url":"${{ github.event.pull_request.html_url || '' }}"
           }'
+
+      - name: Fail Workflow
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
