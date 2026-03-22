@@ -2,10 +2,19 @@ name: AI CI/CD Monitoring
 
 on:
   workflow_call:
+    inputs:
+      working-directory:
+        required: false
+        type: string
+        default: '.'
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
 
     steps:
       - name: Checkout
@@ -30,10 +39,7 @@ jobs:
             "commit_sha":"${{ github.sha }}",
             "author":"${{ github.actor }}",
             "event_name":"${{ github.event_name }}",
-            "run_url":"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
-            "pr_number":"${{ github.event.pull_request.number || '' }}",
-            "pr_title":"${{ github.event.pull_request.title || '' }}",
-            "pr_url":"${{ github.event.pull_request.html_url || '' }}"
+            "run_url":"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           }'
 
       - name: Fail Workflow
